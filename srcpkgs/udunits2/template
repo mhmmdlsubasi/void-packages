@@ -1,0 +1,24 @@
+# Template file for 'udunits2'
+pkgname=udunits2
+version=2.2.28
+revision=1
+build_style=gnu-configure
+configure_args="--libdir=/usr/lib"
+hostmakedepends="pkg-config texinfo"
+makedepends="expat-devel"
+short_desc="Unidata library for units of physical quantities"
+maintainer="Muhammed Ali Subaşı <mhmmdlsubasi@gmail.com>"
+license="UCAR-Unidata"
+homepage="https://www.unidata.ucar.edu/software/udunits/"
+distfiles="https://downloads.unidata.ucar.edu/udunits/${version}/udunits-${version}.tar.gz"
+checksum=590baec83161a3fd62c00efa66f6113cec8a7c461e3f61a5182167e0cc5d579e
+
+udunits2-devel_package() {
+	depends="${sourcepkg}>=${version}_${revision}"
+	short_desc+=" - development files"
+	pkg_install() {
+		vmove usr/include
+		vmove "usr/lib/*.a"
+		vmove "usr/lib/*.so"
+	}
+}
