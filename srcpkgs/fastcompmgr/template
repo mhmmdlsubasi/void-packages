@@ -1,0 +1,16 @@
+# Template file for 'fastcompmgr'
+pkgname=fastcompmgr
+version=0.6.1
+revision=1
+build_style=gnu-makefile
+makedepends="libX11-devel libXcomposite-devel libXdamage-devel libXfixes-devel libXrender-devel pkg-config make"
+short_desc="A fast compositor for X11"
+maintainer="Muhammed Ali Subaşı <mhmmdlsubasi@gmail.com>"
+license="GPL-3.0-or-later"
+homepage="https://github.com/tycho-kirchner/fastcompmgr"
+distfiles="https://github.com/tycho-kirchner/${pkgname}/archive/refs/tags/v${version}.tar.gz"
+checksum=b93b5c6ed6926e7c9419e3e620d2bf26a8f106bd55f59474e0d7d6328003192c
+
+do_install() {
+		vbin fastcompmgr
+	}
