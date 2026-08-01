@@ -1,0 +1,43 @@
+# Template file for 'gprojector'
+pkgname=gprojector
+version=3.4.8
+revision=1
+hostmakedepends="unzip"
+depends="virtual?java-runtime"
+short_desc="Map projection explorer by NASA GISS"
+maintainer="Muhammed Ali Subaşı <mhmmdlsubasi@gmail.com>"
+license="custom:NASA-1.3"
+homepage="https://www.giss.nasa.gov/tools/gprojector/"
+distfiles="https://www.giss.nasa.gov/tools/gprojector/download/G.ProjectorJ-${version}.tgz"
+checksum="6cc07e36e8824fcfa039a2a731a01304f7fedda707f34bebbff56e0f52e7939c"
+
+do_install() {
+	vmkdir usr/share/gprojector
+	vcopy "jars" usr/share/gprojector
+	vinstall gprojector.sh 755 usr/share/gprojector
+
+	# -sf ile çakışmaları zorlayarak üzerine yaz
+	vmkdir usr/bin
+	ln -sf /usr/share/gprojector/gprojector.sh ${DESTDIR}/usr/bin/gprojector
+
+	# İkon
+	vmkdir usr/share/pixmaps
+	unzip -p jars/G.Projector.jar gov/nasa/giss/projector/about/resources/projector3_500x500.png > ${DESTDIR}/usr/share/pixmaps/gprojector.png
+
+	# Desktop dosyası
+	vmkdir usr/share/applications
+	cat <<EOF > ${DESTDIR}/usr/share/applications/gprojector.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=G.Projector
+GenericName=Map Projection Explorer
+Comment=Transform map drilldowns into over 200 global and regional map projections
+Exec=gprojector %F
+Icon=gprojector
+Terminal=false
+Categories=Science;DataVisualization;Graphics;
+EOF
+
+	vlicense README.txt
+}
