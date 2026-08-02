@@ -1,0 +1,14 @@
+# Template file for 'cdo'
+pkgname=cdo
+version=2.6.3
+revision=1
+build_style=gnu-configure
+configure_args="--with-netcdf --with-hdf5 --with-proj --with-curl --with-fftw3 --with-udunits2 --with-eccodes --libdir=/usr/lib"
+hostmakedepends="pkg-config python3"
+makedepends="hdf5-devel netcdf-devel proj-devel libcurl-devel fftw-devel udunits2-devel eccodes-devel"
+short_desc="Climate Data Operators"
+maintainer="Muhammed Ali Subaşı <mhmmdlsubasi@gmail.com>"
+license="GPL-2.0-or-later"
+homepage="https://code.mpimet.mpg.de/projects/cdo"
+distfiles="https://code.mpimet.mpg.de/attachments/download/30224/${pkgname}-${version}.tar.gz"
+checksum=889ece29314b48cbf47ba14ab5f1779886f128767f6d22dfcc7fad1e62f2d017
