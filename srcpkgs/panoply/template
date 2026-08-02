@@ -1,0 +1,51 @@
+# Template file for 'panoply'
+pkgname=panoply
+version=5.10.1
+revision=1
+hostmakedepends="aria2 unzip"
+depends="openjdk11"
+short_desc="Graphical viewer for netCDF, GRIB, and HDF datasets"
+maintainer="Muhammed Ali Subaşı <mhmmdlsubasi@gmail.com>"
+license="custom:NASA-1.3"
+homepage="https://www.giss.nasa.gov/tools/panoply"
+distfiles="https://www.giss.nasa.gov/tools/${pkgname}/download/PanoplyJ-${version}.tgz"
+checksum=c52bf3603ec1937482d165214152918640994e2075bc001333ba921b0f54ecba
+
+do_fetch() {
+	local target_dir="${XBPS_SRCDISTDIR}/${pkgname}-${version}"
+	mkdir -p "${target_dir}"
+	aria2c -s 16 -x 16 -k 1M -d "${target_dir}" "${distfiles}"
+}
+
+do_install() {
+	# Hedef dizini oluştur ve jars klasörünü içine aktar (/usr/share/panoply/jars)
+	vmkdir usr/share/panoply
+	vcopy "jars" usr/share/panoply
+	vinstall panoply.sh 755 usr/share/panoply
+
+	# Executable symlink
+	vmkdir usr/bin
+	ln -sf /usr/share/panoply/panoply.sh ${DESTDIR}/usr/bin/panoply
+
+	# İkonu JAR içinden ayıkla
+	vmkdir usr/share/pixmaps
+	unzip -p jars/Panoply.jar gov/nasa/giss/panoply/about/panoply_320x320.png > ${DESTDIR}/usr/share/pixmaps/panoply.png
+
+	# Desktop dosyası
+	vmkdir usr/share/applications
+	cat <<EOF > ${DESTDIR}/usr/share/applications/panoply.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Panoply
+GenericName=NetCDF, HDF and GRIB Data Viewer
+Comment=Plot geo-referenced arrays from netCDF, GRIB, and HDF datasets
+Exec=panoply %F
+Icon=panoply
+Terminal=false
+Categories=Science;DataVisualization;Graphics;
+MimeType=application/x-netcdf;
+EOF
+
+	vlicense README.txt
+}
