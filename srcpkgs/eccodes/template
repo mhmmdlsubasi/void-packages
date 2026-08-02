@@ -1,0 +1,28 @@
+# Template file for 'eccodes'
+pkgname=eccodes
+version=2.48.0
+revision=1
+build_style=cmake
+configure_args="-DENABLE_NETCDF=ON -DENABLE_JPG=ON -DENABLE_PNG=ON -DENABLE_AEC=OFF -DENABLE_PYTHON=OFF -DENABLE_FORTRAN=OFF"
+hostmakedepends="pkg-config cmake ninja perl"
+makedepends="libpng-devel libopenjpeg2-devel netcdf-devel"
+short_desc="ECMWF decoding and encoding software for GRIB and BUFR"
+maintainer="Muhammed Ali Subaşı <mhmmdlsubasi@gmail.com>"
+license="Apache-2.0"
+homepage="https://confluence.ecmwf.int/display/ECC"
+distfiles="https://confluence.ecmwf.int/download/attachments/45757960/eccodes-${version}-Source.tar.gz"
+checksum=62e8fa5ca137d138189a5fdd6d5b2205c89cc26338e3f4286aba3d89b49c9f9a
+
+CFLAGS="-O3 -march=native"
+CXXFLAGS="-O3 -march=native"
+
+eccodes-devel_package() {
+	depends="${sourcepkg}>=${version}_${revision}"
+	short_desc+=" - development files"
+	pkg_install() {
+		vmove usr/include
+		vmove "usr/lib/*.so"
+		vmove usr/lib/cmake
+		vmove usr/lib/pkgconfig
+	}
+}
