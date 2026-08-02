@@ -1,0 +1,115 @@
+# Template file for 'antigravity-ide'
+pkgname=antigravity-ide
+version=2.1.1
+revision=1
+archs="x86_64 aarch64"
+create_wrksrc=yes
+depends="
+ alsa-lib
+ at-spi2-core
+ cairo
+ cups
+ dbus
+ expat
+ glib
+ gtk+3
+ libX11
+ libXcomposite
+ libXdamage
+ libXext
+ libXfixes
+ libXrandr
+ libXScrnSaver
+ libdrm
+ libsecret
+ libxcb
+ libxkbcommon
+ libxkbfile
+ libxshmfence
+ lsof
+ mesa
+ nspr
+ nss
+ pango
+ shared-mime-info
+ xdg-utils
+ hicolor-icon-theme
+"
+short_desc="Antigravity IDE from Google"
+maintainer="Muhammed Ali Subaşı <mhmmdlsubasi@gmail.com>"
+license="custom:Google-Antigravity"
+homepage="https://antigravity.google/"
+restricted=yes
+nopie=yes
+nostrip=yes
+noshlibprovides=yes
+
+_build=6123990880747520
+_baseurl="https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/${version}-${_build}"
+_app_dir="Antigravity IDE"
+
+case "$XBPS_TARGET_MACHINE" in
+	x86_64)
+		distfiles="${_baseurl}/linux-x64/Antigravity%20IDE.tar.gz>${pkgname}-${version}-x64.tar.gz"
+		checksum="5b2cebf7d33a68d003fd8f1fa988d1600905ace22504a085e5384214290878bd"
+		;;
+	aarch64)
+		distfiles="${_baseurl}/linux-arm/Antigravity%20IDE.tar.gz>${pkgname}-${version}-arm64.tar.gz"
+		checksum="c6b6fef97cfc078ae7f92d02f9483a12437b6602c7d322a7d445668c2f0c16a6"
+		;;
+esac
+
+do_install() {
+	# 1. Uygulama dosyalarının kurulması
+	vmkdir usr/lib/${pkgname}
+	vcopy "${_app_dir}/*" usr/lib/${pkgname}
+
+	# Chromium SUID sandbox izni
+	chmod 4755 "${DESTDIR}/usr/lib/${pkgname}/chrome-sandbox"
+
+	# 2. POSIX uyumlu wrapper betiği
+	cat <<EOF > antigravity-ide.sh
+#!/bin/sh
+XDG_CONFIG_HOME="\${XDG_CONFIG_HOME:-\$HOME/.config}"
+
+ulimit -c 0
+
+if [ -f "\$XDG_CONFIG_HOME/antigravity-ide-flags.conf" ]; then
+	ANTIGRAVITY_IDE_USER_FLAGS="\$(sed 's/#.*//' "\$XDG_CONFIG_HOME/antigravity-ide-flags.conf" | tr '\n' ' ')"
+fi
+
+if [ "\$XDG_SESSION_TYPE" = "wayland" ]; then
+	WAYLAND_FLAGS="--ozone-platform=wayland"
+fi
+
+exec /usr/lib/${pkgname}/bin/antigravity-ide \$WAYLAND_FLAGS \$ANTIGRAVITY_IDE_USER_FLAGS "\$@"
+EOF
+	vbin antigravity-ide.sh antigravity-ide
+
+	# 3. Masaüstü Kısayolu
+	cat <<EOF > antigravity-ide.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Antigravity IDE
+GenericName=Text Editor
+Comment=Antigravity IDE from Google
+Exec=antigravity-ide %F
+Icon=antigravity-ide
+StartupNotify=true
+StartupWMClass=antigravity-ide
+Categories=Development;IDE;TextEditor;
+MimeType=text/plain;inode/directory;
+EOF
+	vinstall antigravity-ide.desktop 644 usr/share/applications
+
+	# 4. İkon, kabuk tamamlamaları ve lisanslar (Doğrudan kaynak dizinden)
+	vinstall "${_app_dir}/resources/app/resources/linux/code.png" 644 usr/share/pixmaps antigravity-ide.png
+
+	vcompletion "${_app_dir}/resources/completions/bash/antigravity-ide" bash
+	vcompletion "${_app_dir}/resources/completions/zsh/_antigravity-ide" zsh antigravity-ide
+
+	vlicense "${_app_dir}/resources/app/LICENSE.txt"
+	vlicense "${_app_dir}/LICENSES.chromium.html"
+	vlicense "${_app_dir}/resources/app/ThirdPartyNotices.txt"
+}
