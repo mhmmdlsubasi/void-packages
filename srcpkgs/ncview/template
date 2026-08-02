@@ -1,0 +1,21 @@
+# Template file for 'ncview'
+pkgname=ncview
+version=2.1.11
+revision=1
+build_style=gnu-configure
+hostmakedepends="pkg-config"
+makedepends="netcdf-devel libXaw-devel libpng-devel udunits2-devel expat-devel"
+short_desc="Visual browser for netCDF format files"
+maintainer="Muhammed Ali Subaşı <mhmmdlsubasi@gmail.com>"
+license="GPL-3.0-only"
+homepage="https://cirrus.ucsd.edu/ncview/"
+distfiles="https://cirrus.ucsd.edu/~pierce/ncview/ncview-${version}.tar.gz"
+checksum="597cfddf9c2d7993e9b0b86bca1b73839567ee9116ee33f6d750a449b5033d91"
+
+CFLAGS="-Wno-incompatible-pointer-types"
+
+post_install() {
+	vinstall Ncview-appdefaults 644 usr/share/X11/app-defaults Ncview
+	vman data/ncview.1
+	vlicense COPYING
+}
