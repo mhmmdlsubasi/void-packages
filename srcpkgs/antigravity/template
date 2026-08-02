@@ -1,0 +1,120 @@
+# Template file for 'antigravity'
+pkgname=antigravity
+version=2.4.3
+revision=1
+archs="x86_64 aarch64"
+create_wrksrc=yes
+depends="
+ alsa-lib
+ at-spi2-core
+ cairo
+ cups
+ dbus
+ expat
+ glib
+ gtk+3
+ libX11
+ libXcomposite
+ libXdamage
+ libXext
+ libXfixes
+ libXrandr
+ libXScrnSaver
+ libdrm
+ libsecret
+ libxcb
+ libxkbcommon
+ libxkbfile
+ libxshmfence
+ lsof
+ mesa
+ nspr
+ nss
+ pango
+ shared-mime-info
+ xdg-utils
+ hicolor-icon-theme
+"
+short_desc="Agentic development hub from Google"
+maintainer="Muhammed Ali Subaşı <mhmmdlsubasi@gmail.com>"
+license="custom:Google-Antigravity"
+homepage="https://antigravity.google/"
+restricted=yes
+nopie=yes
+nostrip=yes
+noshlibprovides=yes
+
+_build=4510119262814208
+_baseurl="https://storage.googleapis.com/antigravity-public/antigravity-hub/${version}-${_build}"
+
+case "$XBPS_TARGET_MACHINE" in
+	x86_64)
+		distfiles="${_baseurl}/linux-x64/Antigravity.tar.gz>${pkgname}-${version}-x64.tar.gz"
+		checksum="55fb2a51b7051b122f3e93bc80936b6f3a8c49403484512694557b4519447c0e"
+		_app_dir="Antigravity-x64"
+		;;
+	aarch64)
+		distfiles="${_baseurl}/linux-arm/Antigravity.tar.gz>${pkgname}-${version}-arm64.tar.gz"
+		checksum="284067b2919c75bd94e73f92c7443e233697d5c327093f3c778b4eb10bd71eab"
+		_app_dir="Antigravity-arm64"
+		;;
+esac
+
+do_install() {
+	# 1. Uygulama dosyalarının kurulması
+	vmkdir usr/lib/${pkgname}
+	vcopy "${_app_dir}/*" usr/lib/${pkgname}
+
+	# Chromium SUID sandbox izni
+	chmod 4755 "${DESTDIR}/usr/lib/${pkgname}/chrome-sandbox"
+
+	# 2. POSIX uyumlu wrapper betiği
+	cat <<EOF > antigravity.sh
+#!/bin/sh
+XDG_CONFIG_HOME="\${XDG_CONFIG_HOME:-\$HOME/.config}"
+
+ulimit -c 0
+
+if [ -f "\$XDG_CONFIG_HOME/antigravity-flags.conf" ]; then
+	ANTIGRAVITY_USER_FLAGS="\$(sed 's/#.*//' "\$XDG_CONFIG_HOME/antigravity-flags.conf" | tr '\n' ' ')"
+fi
+
+if [ "\$XDG_SESSION_TYPE" = "wayland" ]; then
+	WAYLAND_FLAGS="--ozone-platform=wayland"
+fi
+
+exec /usr/lib/${pkgname}/antigravity \$WAYLAND_FLAGS \$ANTIGRAVITY_USER_FLAGS "\$@"
+EOF
+	vbin antigravity.sh antigravity
+
+	# 3. Masaüstü kısayolu
+	cat <<EOF > antigravity.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Antigravity
+GenericName=Development Tool
+Comment=Agentic development hub from Google
+Exec=antigravity %U
+Icon=antigravity
+StartupNotify=true
+StartupWMClass=Antigravity
+Categories=Development;
+EOF
+	vinstall antigravity.desktop 644 usr/share/applications
+
+	# 4. ASAR içerisinden ikon ayıklama
+	local _app_asar="${_app_dir}/resources/app.asar"
+	if [ -f "${_app_asar}" ]; then
+		local _header_size="$(od -An -tu4 -j 12 -N 4 "${_app_asar}" | tr -d ' ')"
+		dd if="${_app_asar}" of=asar-header.json bs=1 skip=16 count="${_header_size}" status=none
+		local _icon_size="$(sed -n 's/.*"icon.png":{"size":\([0-9][0-9]*\),.*/\1/p' asar-header.json)"
+		local _icon_offset="$(sed -n 's/.*"icon.png":{.*"offset":"\([0-9][0-9]*\)".*/\1/p' asar-header.json)"
+		dd if="${_app_asar}" of=antigravity.png bs=1 skip="$((16 + _header_size + _icon_offset))" count="${_icon_size}" status=none
+		vinstall antigravity.png 644 usr/share/pixmaps antigravity.png
+	fi
+
+	# 5. Lisans dosyaları
+	vlicense "${_app_dir}/LICENSE.electron.txt"
+	vlicense "${_app_dir}/LICENSES.chromium.html"
+}
